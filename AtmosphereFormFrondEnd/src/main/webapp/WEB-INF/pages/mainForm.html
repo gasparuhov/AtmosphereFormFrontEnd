@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html ng-app="Atmosphere" lang="en">
+<head>
+<title>Atmosphere bug report</title>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.0/select.min.css"
+	rel="stylesheet">
+
+<link href="css/formLook.css" rel="stylesheet" type="text/css" />
+	<link href="css/fileinput.min.css" rel="stylesheet" type="text/css" />
+<link rel="icon" href="http://localhost:8080/AtmosphereFormFrondEnd/pages/mainForm.html/favicon.ico" type="image/x-icon"> 
+</head>
+<body>
+	<div class="container">
+		<div>	
+			<h1 class="page-header" >ATMOSPHERE BUG REPORT</h1>
+		</div>
+		<div id="messages"></div>
+		<div ng-controller="reportController">
+			<form ng-submit="submit()" name="reportForm" role="form"
+				class="form-horizontal">
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.author.$invalid && !reportForm.author.$pristine,
+					'has-success':  reportForm.author.$valid}">
+					<label class="control-label col-sm-2" for="author">Author:</label>
+					<div class="col-sm-10">
+						<input type="email" pattern="(.+)\.(.+)@musala.com"
+							class="form-control" id="author" ng-model="report.author"
+							name="author" ng-blur="getUsedNumbers()" required>
+						<p
+							ng-show="reportForm.author.$invalid && !reportForm.author.$pristine"
+							class="help-block">Enter your full MUSALA email address
+							xxx.xxx@musala.com. Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group" 
+					ng-class="{'has-error' : reportForm.description.$invalid && !reportForm.description.$pristine,
+					'has-success':  reportForm.description.$valid
+					}">
+					<label class="control-label col-sm-2" for="description">Defect
+						summary:</label>
+					<div class="col-sm-10">
+						<textarea id="description" class="form-control" rows="3" cols="40"
+							ng-model="report.description" name="description" required></textarea>
+						<p
+							ng-show="reportForm.description.$invalid && !reportForm.description.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.application.$invalid && !reportForm.application.$pristine, 'has-success':  reportForm.application.$valid}">
+					<label class="control-label col-sm-2" for="application">Application
+						name:</label>
+					<div class="col-sm-10">
+						<input class="form-control" id="application" type="text"
+							ng-model="report.application" name="application" required>
+						<p
+							ng-show="reportForm.application.$invalid && !reportForm.application.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.appVersion.$invalid && !reportForm.appVersion.$pristine, 'has-success':  reportForm.appVersion.$valid}">
+					<label class="control-label col-sm-2" for="appVersion">Application
+						version:</label>
+					<div class="col-sm-10">
+						<input class="form-control" id="appVersion" type="text"
+							ng-model="report.appVersion" name="appVersion" required>
+						<p
+							ng-show="reportForm.appVersion.$invalid && !reportForm.appVersion.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.appURL.$invalid && !reportForm.appURL.$pristine, 'has-success':  reportForm.appURL.$valid}">
+					<label class="control-label col-sm-2" for="appURL">Application
+						URL:</label>
+					<div class="col-sm-10">
+					
+						<input class="form-control"
+							ng-pattern="/(https:\/\/|www\.)?play.google.com\/store\/apps\/[a-z?0-9]/"
+							id="appURL" type="url" ng-model="report.appURL" name="appURL"
+							required>
+							<p ng-show="reportForm.appURL.$invalid && !reportForm.appURL.$pristine"
+							class="help-block">Application url must be GOOGLE PLAY URL!</p>
+						
+					</div>
+				</div>
+				<div class="form-group" ng-class="{'has-error' : reportForm.numbers.$invalid && !reportForm.numbers.$pristine, 'has-success':  reportForm.numbers.$valid}">
+					<label class="control-label col-sm-2" for="numbers">Device
+						model number:</label>
+					<div class="col-sm-10">
+						<ui-select class="" id="numbers" ng-model="device.number"
+							reset-search-input="true" name="numbers" required
+							on-select="fillDeviceCombos()"> <ui-select-match
+							allow-clear="true" placeholder="Select model number">
+						<span>{{$select.selected.name}}</span> </ui-select-match> <ui-select-choices
+							repeat="item as item in numbers | filter: {name: $select.search}"
+							refresh="filterNumbers($select.search)" refresh-delay="0">
+						<div ng-bind-html="item.name | highlight: $select.search"></div>
+						<small> Manufacturer:
+							{{item.phoneModel.manufacturer.name}} </small> <small> Model:
+							{{item.phoneModel.name}} </small> </ui-select-choices> </ui-select>
+							<p
+							ng-show="reportForm.numbers.$invalid && !reportForm.numbers.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group" ng-class="{'has-error' : reportForm.manufacturers.$invalid && !reportForm.manufacturers.$pristine, 'has-success': reportForm.manufacturers.$valid}">
+					<label class="control-label col-sm-2" for="manufacturers">Device
+						manufacturer:</label>
+					<div class="col-sm-10">
+						<ui-select class="" id="manufacturers" name="manufacturers" required
+							ng-model="device.manufacturer" on-select="refreshModels()"
+							reset-search-input="true"> <ui-select-match
+							allow-clear="true" placeholder="Select manufacturer">
+						<span>{{$select.selected.name}}</span> </ui-select-match> <ui-select-choices
+							repeat="item as item in manufacturers | filter: {name: $select.search}">
+						<div ng-bind-html="item.name | highlight: $select.search"></div>
+						</ui-select-choices> </ui-select>
+					</div>
+				</div>
+				<div class="form-group" ng-class="{'has-error' : reportForm.models.$invalid && !reportForm.models.$pristine, 'has-success': reportForm.models.$valid}">
+					<label class="control-label col-sm-2" for="models">Device
+						model:</label>
+					<div class="col-sm-10">
+						<ui-select class="" id="models" ng-model="device.model" name="models" required
+							on-select="refreshNumbers()" reset-search-input="true"
+							ui-select-required> <ui-select-match
+							allow-clear="true" placeholder="Select model">
+						<span>{{$select.selected.name}}</span> </ui-select-match> <ui-select-choices
+							repeat="item as item in models | filter: {name: $select.search}">
+						<div ng-bind-html="item.name | highlight: $select.search"></div>
+						</ui-select-choices> </ui-select>
+					</div>
+				</div>
+				<div class="form-group" ng-class="{'has-error' : reportForm.androids.$invalid && !reportForm.androids.$pristine, 'has-success': reportForm.androids.$valid}">
+					<label class="control-label col-sm-2" for="androids">Android
+						version:</label>
+					<div class="col-sm-10">
+						<ui-select class="" id="androids" ng-model="device.android"
+							reset-search-input="true" name="androids" required> <ui-select-match
+							allow-clear="true" placeholder="Select android">
+						<span>{{$select.selected.name}}</span> </ui-select-match> <ui-select-choices
+							repeat="item as item in androids | filter: {name: $select.search}">
+						<div ng-bind-html="item.name | highlight: $select.search"></div>
+						<small> API level: {{item.apiLevel}} </small> </ui-select-choices> </ui-select>
+						<p
+							ng-show="reportForm.androids.$invalid && !reportForm.androids.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group" ng-class="{'has-error' : reportForm.stepsToReproduce.$invalid && !reportForm.stepsToReproduce.$pristine, 'has-success': reportForm.stepsToReproduce.$valid}">
+					<label class="control-label col-sm-2" for="stepsToReproduce">Steps
+						to reproduce:</label>
+					<div class="col-sm-10">
+						<textarea class="form-control" id="stepsToReproduce" rows="6"
+							cols="40" ng-model="report.stepsToReproduce" name="stepsToReproduce" required></textarea>
+							<p
+							ng-show="reportForm.stepsToReproduce.$invalid && !reportForm.stepsToReproduce.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.expectedResult.$invalid && !reportForm.expectedResult.$pristine, 'has-success': reportForm.expectedResult.$valid}">
+					<label class="control-label col-sm-2" for="expectedResult">Expected
+						result:</label>
+					<div class="col-sm-10">
+						<textarea class="form-control" id="expectedResult" rows="3"
+							cols="40" ng-model="report.expectedResult" name="expectedResult"
+							required></textarea>
+						<p
+							ng-show="reportForm.expectedResult.$invalid && !reportForm.expectedResult.$pristine"
+							class="help-block">Expected result is required!</p>
+					</div>
+				</div>
+				<div class="form-group"
+					ng-class="{'has-error' : reportForm.actualResult.$invalid && !reportForm.actualResult.$pristine, 'has-success': reportForm.actualResult.$valid}">
+					<label class="control-label col-sm-2" for="actualResult">Actual
+						result:</label>
+					<div class="col-sm-10">
+						<textarea class="form-control" id="actualResult" rows="3"
+							cols="40" ng-model="report.actualResult" name="actualResult"
+							required></textarea>
+						<p
+							ng-show="reportForm.actualResult.$invalid && !reportForm.actualResult.$pristine"
+							class="help-block">Field is required!</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-sm-2" for="fileInput">Video
+						file:</label>
+					<div class="col-sm-10">
+						<input id="fileInput" type="file" file-input="file"
+							data-show-preview="true" data-show-upload="false" 
+							data-show-caption="true" class="file" name="file">
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-13">
+						<input class="btn btn-success btn-lg btn-block"
+							ng-disabled="reportForm.$invalid" type="submit">
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	
+	<script
+		src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script
+		src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0rc1/angular-route.min.js"></script>
+		
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.0/select.min.js"></script>
+	<script
+		src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-sanitize.js"></script>
+
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.1/angular-animate.min.js"></script>
+	<script src="../scripts/app.js"></script>
+	<script src="../scripts/js/init.js"></script>
+	<script src="../scripts/js/directives.js"></script>
+	<script src="../scripts/js/devices.js"></script>
+	<script src="../scripts/controllers/SubmitReportController.js"></script>
+	<script src="../scripts/js/fileinput.min.js"></script>
+
+
+</body>
+</html>

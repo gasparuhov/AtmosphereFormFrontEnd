@@ -1,0 +1,15 @@
+p.alert {
+	color: red;
+}
+
+h1.page-header {
+	color: #193264;
+	text-transform: uppercase;
+
+	 font-style: italic;
+/* 	background-image:
+		url("../img/10615564_313247702180442_6576256262681944000_n.jpg"); */
+	background-repeat: no-repeat;
+	background-position: 180px center;
+	text-align: center;
+}
